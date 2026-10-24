@@ -50,6 +50,34 @@ const certificateDialogTitle = document.querySelector('#certificate-dialog-title
 const certificateDialogHint = document.querySelector('.certificate-dialog-hint');
 const certificateOpenLink = document.querySelector('#certificate-open-link');
 
+function addRootImageFallback(image, filePath = image.getAttribute('src')) {
+  if (!filePath) return;
+
+  const sourceUrl = new URL(filePath, document.baseURI);
+  const pathParts = sourceUrl.pathname.split('/').filter(Boolean);
+  const fileName = decodeURIComponent(pathParts.pop() || '');
+  if (pathParts.length === 0 || !fileName) return;
+
+  const rootPath = encodeURIComponent(fileName);
+  image.dataset.originalImagePath = filePath;
+  image.dataset.imagePathAttempt = 'root';
+  image.addEventListener('error', () => {
+    if (image.dataset.imagePathAttempt !== 'root') return;
+
+    image.dataset.imagePathAttempt = 'original';
+    image.src = image.dataset.originalImagePath;
+    if (image.id === 'certificate-preview-image') {
+      certificateOpenLink.href = image.dataset.originalImagePath;
+    }
+  });
+  image.src = rootPath;
+  if (image.id === 'certificate-preview-image') {
+    certificateOpenLink.href = rootPath;
+  }
+}
+
+document.querySelectorAll('img').forEach((image) => addRootImageFallback(image));
+
 document.querySelectorAll('.certificate-card').forEach((card) => {
   const button = document.createElement('button');
   button.className = 'certificate-view-button';
@@ -82,8 +110,10 @@ document.querySelector('.certificate-grid').addEventListener('click', (event) =>
       preview.src = filePath;
     } else if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'jfif'].includes(extension)) {
       preview = document.createElement('img');
+      preview.id = 'certificate-preview-image';
       preview.alt = `${title} certificate`;
       preview.src = filePath;
+      addRootImageFallback(preview, filePath);
     } else {
       certificatePreview.textContent = 'Unsupported file type. Use a PDF, JPG, PNG, WEBP, or GIF certificate.';
       certificateDialogHint.hidden = true;
