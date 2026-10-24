@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.angelavizcarra.com"
+        }
+      ],
+      "destination": "https://angelavizcarra.com/$1",
+      "permanent": true
+    }
+  ]
+}
